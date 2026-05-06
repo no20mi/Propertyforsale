@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>売り物件一覧</title>
+  <style>
+    :root {
+      --primary: #1a3a5c;
+      --primary-light: #243f60;
+      --accent: #e67e22;
+      --bg: #f0f4f8;
+      --card-bg: #ffffff;
+      --text: #2c3e50;
+      --text-muted: #7f8c8d;
+      --border: #dde3ec;
+      --success: #1a7a45;
+      --warning: #b57a0e;
+      --danger: #c0392b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro', 'メイリオ', Meiryo, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 18px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    header h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: 0.02em; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .last-updated { font-size: 0.78rem; opacity: 0.65; }
+    .refresh-btn {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: white;
+      padding: 7px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+    .refresh-btn:hover { background: rgba(255,255,255,0.22); }
+
+    /* ── Tabs ── */
+    .tabs {
+      background: var(--primary);
+      padding: 0 40px;
+      display: flex;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,0.55);
+      padding: 13px 26px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .tab-btn.active { color: white; border-bottom-color: var(--accent); }
+    .tab-btn:hover { color: rgba(255,255,255,0.9); }
+
+    /* ── Layout ── */
+    .container { max-width: 1440px; margin: 0 auto; padding: 28px 40px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Stats bar ── */
+    .stats-bar { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-card {
+      background: white;
+      border-radius: 8px;
+      padding: 14px 22px;
+      min-width: 160px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      flex: 1;
+    }
+    .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--primary); line-height: 1; }
+    .stat-unit { font-size: 0.9rem; font-weight: 400; }
+
+    /* ── Filters ── */
+    .filters {
+      background: white;
+      border-radius: 8px;
+      padding: 14px 20px;
+      margin-bottom: 22px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    .filter-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+    .filter-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+    .filter-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 14px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-family: inherit;
+      transition: all 0.18s;
+      color: var(--text);
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* ── Property cards ── */
+    .property-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 18px;
+    }
+    .property-card {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.18s, box-shadow 0.18s;
+    }
+    .property-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+
+    .card-header {
+      background: var(--primary);
+      color: white;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .card-address { font-size: 0.88rem; font-weight: 600; line-height: 1.45; flex: 1; }
+    .card-type {
+      background: rgba(255,255,255,0.18);
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.73rem;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .card-body { padding: 16px 18px; flex: 1; }
+    .card-price {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .card-yield-badge {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: #fff5ec;
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid #f0d0a8;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 16px;
+      margin: 12px 0;
+    }
+    .detail-item { display: flex; flex-direction: column; }
+    .detail-label { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 1px; }
+    .detail-value { font-size: 0.88rem; font-weight: 500; }
+
+    .full-width { grid-column: 1 / -1; }
+
+    .card-overview {
+      font-size: 0.8rem;
+      color: #556; /* slightly muted */
+      line-height: 1.65;
+      margin-top: 8px;
+      overflow: hidden;
+      max-height: 64px;
+      transition: max-height 0.3s;
+    }
+    .card-overview.expanded { max-height: 600px; }
+    .expand-btn {
+      font-size: 0.74rem;
+      color: var(--primary);
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 4px 0 0;
+      font-family: inherit;
+    }
+
+    .card-footer {
+      padding: 11px 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .footer-right { display: flex; align-items: center; gap: 8px; }
+    .card-date { font-size: 0.73rem; color: var(--text-muted); }
+    .doc-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.8rem;
+      border: 1px solid var(--border);
+      padding: 4px 11px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.18s;
+    }
+    .doc-link:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+    /* ── Status badges ── */
+    .status-badge {
+      padding: 3px 11px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .s-active      { background: #d5f0e5; color: #1a7a45; }
+    .s-negotiating { background: #fef3cd; color: #b57a0e; }
+    .s-sold        { background: #fce8e8; color: #c0392b; }
+    .s-other       { background: #e8eaf0; color: #546e7a; }
+
+    /* ── Yield table ── */
+    .yield-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .yield-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: white;
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 6px;
+    }
+
+    .yield-wrapper {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      overflow-x: auto;
+    }
+    .yield-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+    .yield-table th {
+      background: var(--primary);
+      color: white;
+      padding: 13px 16px;
+      text-align: left;
+      font-size: 0.83rem;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    .yield-table th.sortable { cursor: pointer; user-select: none; }
+    .yield-table th.sortable:hover { background: var(--primary-light); }
+    .yield-table td {
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.87rem;
+      vertical-align: middle;
+    }
+    .yield-table tr:last-child td { border-bottom: none; }
+    .yield-table tr:hover td { background: #f6f9fc; }
+    .rank-cell { font-weight: 700; color: var(--text-muted); font-size: 1rem; text-align: center; }
+    .rank-1 { color: #c9a227; }
+    .rank-2 { color: #7b8fa1; }
+    .rank-3 { color: #a0522d; }
+
+    .yield-num { font-size: 1.2rem; font-weight: 700; }
+    .y-high { color: #1a7a45; }
+    .y-mid  { color: #b57a0e; }
+    .y-low  { color: #c0392b; }
+    .y-none { color: var(--text-muted); font-size: 0.82rem; font-weight: 400; }
+
+    .yield-bar-wrap { background: var(--bg); border-radius: 4px; height: 5px; margin-top: 5px; width: 100px; }
+    .yield-bar { height: 100%; border-radius: 4px; background: var(--accent); }
+
+    /* ── Loading / Error ── */
+    .loading-wrap { text-align: center; padding: 60px 20px; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-wrap p { color: var(--text-muted); font-size: 0.9rem; }
+    .error-box {
+      background: #fce8e8;
+      color: #c0392b;
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .no-data { text-align: center; padding: 50px; color: var(--text-muted); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      header { padding: 14px 16px; }
+      header h1 { font-size: 1.1rem; }
+      .tabs { padding: 0 16px; }
+      .container { padding: 18px 16px; }
+      .property-grid { grid-template-columns: 1fr; }
+      .stats-bar { gap: 10px; }
+      .stat-card { min-width: 120px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>&#127968; 売り物件一覧</h1>
+  <div class="header-right">
+    <span class="last-updated" id="lastUpdated">読み込み中...</span>
+    <button class="refresh-btn" onclick="loadData()">&#8635; 更新</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" onclick="switchTab('bukken', this)">売り物件</button>
+  <button class="tab-btn"        onclick="switchTab('rimawari', this)">利回り</button>
+</nav>
+
+<div class="container">
+
+  <!-- ── 売り物件タブ ── -->
+  <div id="tab-bukken" class="tab-content active">
+    <div class="stats-bar" id="statsBar"></div>
+    <div class="filters" id="filters">
+      <span class="filter-label">タイプ</span>
+      <div id="typeFilters" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      <div class="filter-sep"></div>
+      <span class="filter-label">ステータス</span>
+      <div id="statusFilters" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    </div>
+    <div class="property-grid" id="propertyGrid">
+      <div class="loading-wrap" style="grid-column:1/-1">
+        <div class="spinner"></div><p>データを読み込み中...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 利回りタブ ── -->
+  <div id="tab-rimawari" class="tab-content">
+    <div class="yield-header">
+      <div class="yield-note">
+        &#9432;&#xFE0E; 表面利回り = 年間収入 ÷ 物件価格 × 100<br>
+        収支データから年間収入を自動抽出しています。データが不足する場合は「—」と表示されます。
+      </div>
+    </div>
+    <div class="yield-wrapper">
+      <table class="yield-table">
+        <thead>
+          <tr>
+            <th style="text-align:center;width:48px">順位</th>
+            <th>物件住所</th>
+            <th>タイプ</th>
+            <th>価格</th>
+            <th>室数</th>
+            <th>収支（概要）</th>
+            <th class="sortable" id="yieldSortHeader" onclick="toggleYieldSort()">表面利回り &#9661;</th>
+            <th>ステータス</th>
+          </tr>
+        </thead>
+        <tbody id="yieldTableBody">
+          <tr><td colspan="8"><div class="loading-wrap"><div class="spinner"></div><p>データを読み込み中...</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SHEET_ID   = '1kxrtAL85mktA8HHlkw_o0AUyOw9sIpTFoq99zCN-Cyg';
+const SHEET_NAME = '売り物件';
+
+let allProps = [];
+let activeType   = 'all';
+let activeStatus = 'all';
+let yieldAsc = false;  // default: high yield first
+
+// ── Tab switching ──────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Parsers ───────────────────────────────────────────────────
+function parsePrice(s) {
+  if (!s) return null;
+  s = s.replace(/[税込\s　]/g, '');
+  let yen = 0;
+  const oku = s.match(/([\d.]+)億/);
+  const man = s.match(/([\d,]+(?:\.\d+)?)万/);
+  if (oku) yen += parseFloat(oku[1]) * 1e8;
+  if (man) yen += parseFloat(man[1].replace(',', '')) * 1e4;
+  return yen > 0 ? yen : null;
+}
+
+function parseAnnualIncome(s) {
+  if (!s) return null;
+
+  // 月額 X 万円
+  const monthly = s.match(/([\d,]+(?:\.\d+)?)万円?\s*[\/／]\s*月/);
+  if (monthly) return parseFloat(monthly[1].replace(',', '')) * 1e4 * 12;
+
+  // 月X万円 without slash
+  const monthly2 = s.match(/月\s*([\d,]+(?:\.\d+)?)万円/);
+  if (monthly2) return parseFloat(monthly2[1].replace(',', '')) * 1e4 * 12;
+
+  // 年間X万円
+  const annual = s.match(/年間[^\d]*([\d,]+(?:\.\d+)?)万円/);
+  if (annual) return parseFloat(annual[1].replace(',', '')) * 1e4;
+
+  // X億X万（年間っぽい文脈）
+  if (s.includes('年')) {
+    const oku = s.match(/([\d.]+)億/);
+    const man = s.match(/([\d,]+)万/);
+    if (oku) return parseFloat(oku[1]) * 1e8;
+    if (man) return parseFloat(man[1].replace(',', '')) * 1e4;
+  }
+
+  return null;
+}
+
+function formatYen(yen) {
+  if (!yen) return '—';
+  const oku = yen / 1e8;
+  if (oku >= 1) {
+    const str = oku % 1 === 0 ? oku.toFixed(0) : oku.toFixed(2).replace(/\.?0+$/, '');
+    return str + '億円';
+  }
+  return Math.round(yen / 1e4).toLocaleString() + '万円';
+}
+
+function calcYield(price, income) {
+  if (!price || !income) return null;
+  return (income / price) * 100;
+}
+
+// ── Status badge ──────────────────────────────────────────────
+function statusBadge(s) {
+  if (!s || s === '—') return '<span class="status-badge s-other">未設定</span>';
+  let cls = 's-other';
+  if (/商談|交渉|検討/.test(s)) cls = 's-negotiating';
+  else if (/成約|売却済|SOLD|sold|契約/.test(s)) cls = 's-sold';
+  else if (/募集|売出|新規|公開/.test(s)) cls = 's-active';
+  return `<span class="status-badge ${cls}">${s}</span>`;
+}
+
+// ── Yield color ───────────────────────────────────────────────
+function yieldCls(y) {
+  if (y === null) return 'y-none';
+  if (y >= 8) return 'y-high';
+  if (y >= 5) return 'y-mid';
+  return 'y-low';
+}
+
+// ── Load data (JSONP — works from file:// without CORS issues) ──
+function loadData() {
+  document.getElementById('lastUpdated').textContent = '読み込み中...';
+
+  // Clean up any previous JSONP script tag
+  const old = document.getElementById('__gviz_script');
+  if (old) old.remove();
+
+  const cbName = '__gvizCb';
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:${cbName}&sheet=${encodeURIComponent(SHEET_NAME)}&t=${Date.now()}`;
+
+  // Timeout fallback
+  const timer = setTimeout(() => {
+    delete window[cbName];
+    showLoadError('タイムアウト: スプレッドシートに接続できませんでした。');
+  }, 12000);
+
+  window[cbName] = function(data) {
+    clearTimeout(timer);
+    delete window[cbName];
+
+    const rows = (data.table && data.table.rows) || [];
+    allProps = rows.map(row => {
+      const cells = row.c || [];
+      const get = i => {
+        const c = cells[i];
+        return (c && c.v !== null && c.v !== undefined) ? String(c.v).trim() : '';
+      };
+      return {
+        address:  get(0),
+        type:     get(1),
+        date:     get(2),
+        overview: get(3),
+        rooms:    get(4),
+        roomType: get(5),
+        price:    get(6),
+        notes:    get(7),
+        cashflow: get(8),
+        docUrl:   get(9),
+        status:   get(10),
+      };
+    }).filter(p => p.address);
+
+    renderBukken();
+    renderRimawari();
+
+    const now = new Date();
+    const ts  = now.toLocaleDateString('ja-JP') + ' ' +
+                now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('lastUpdated').textContent = `最終更新: ${ts}`;
+  };
+
+  const script = document.createElement('script');
+  script.id  = '__gviz_script';
+  script.src = url;
+  script.onerror = () => {
+    clearTimeout(timer);
+    delete window[cbName];
+    showLoadError('スクリプトの読み込みに失敗しました。スプレッドシートが公開設定になっているか確認してください。');
+  };
+  document.head.appendChild(script);
+}
+
+function showLoadError(msg) {
+  document.getElementById('propertyGrid').innerHTML =
+    `<div class="error-box" style="grid-column:1/-1">&#9888; ${msg}</div>`;
+  document.getElementById('lastUpdated').textContent = '読み込みエラー';
+}
+
+// ── Render: 売り物件 ──────────────────────────────────────────
+function renderBukken() {
+  // Build filter buttons
+  const types    = [...new Set(allProps.map(p => p.type).filter(Boolean))];
+  const statuses = [...new Set(allProps.map(p => p.status).filter(Boolean))];
+
+  const typeDiv = document.getElementById('typeFilters');
+  typeDiv.innerHTML = '';
+  ['all', ...types].forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (t === activeType ? ' active' : '');
+    btn.textContent = t === 'all' ? 'すべて' : t;
+    btn.onclick = () => { activeType = t; renderBukken(); };
+    typeDiv.appendChild(btn);
+  });
+
+  const stDiv = document.getElementById('statusFilters');
+  stDiv.innerHTML = '';
+  ['all', ...statuses].forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (s === activeStatus ? ' active' : '');
+    btn.textContent = s === 'all' ? 'すべて' : s;
+    btn.onclick = () => { activeStatus = s; renderBukken(); };
+    stDiv.appendChild(btn);
+  });
+
+  // Filter
+  const filtered = allProps.filter(p => {
+    if (activeType   !== 'all' && p.type   !== activeType)   return false;
+    if (activeStatus !== 'all' && p.status !== activeStatus) return false;
+    return true;
+  });
+
+  // Stats
+  const totalPrice = filtered.reduce((s, p) => s + (parsePrice(p.price) || 0), 0);
+  const totalRooms = filtered.reduce((s, p) => {
+    const n = parseInt(p.rooms);
+    return s + (isNaN(n) ? 0 : n);
+  }, 0);
+
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">物件数</div>
+      <div class="stat-value">${filtered.length}<span class="stat-unit"> 件</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">合計価格</div>
+      <div class="stat-value" style="font-size:1.3rem">${formatYen(totalPrice)}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">合計室数</div>
+      <div class="stat-value">${totalRooms || '—'}<span class="stat-unit">${totalRooms ? ' 室' : ''}</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">アセットタイプ</div>
+      <div class="stat-value">${types.length}<span class="stat-unit"> 種</span></div>
+    </div>
+  `;
+
+  // Cards
+  const grid = document.getElementById('propertyGrid');
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="no-data" style="grid-column:1/-1">該当物件はありません</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map((p, i) => {
+    const price    = parsePrice(p.price);
+    const income   = parseAnnualIncome(p.cashflow);
+    const yld      = calcYield(price, income);
+    const yldText  = yld !== null ? yld.toFixed(1) + '%' : null;
+    const isLong   = p.overview.length > 80;
+
+    return `
+    <div class="property-card">
+      <div class="card-header">
+        <div class="card-address">${p.address || '住所不明'}</div>
+        ${p.type ? `<span class="card-type">${p.type}</span>` : ''}
+      </div>
+      <div class="card-body">
+        <div class="card-price">
+          <span>${p.price || '価格未定'}</span>
+          ${yldText ? `<span class="card-yield-badge">${yldText}</span>` : ''}
+        </div>
+        <div class="card-grid">
+          <div class="detail-item">
+            <span class="detail-label">室数</span>
+            <span class="detail-value">${p.rooms || '—'}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">室タイプ</span>
+            <span class="detail-value">${p.roomType || '—'}</span>
+          </div>
+          ${p.cashflow ? `
+          <div class="detail-item full-width">
+            <span class="detail-label">収支</span>
+            <span class="detail-value" style="font-size:0.8rem;color:#445">${p.cashflow}</span>
+          </div>` : ''}
+          ${p.notes ? `
+          <div class="detail-item full-width">
+            <span class="detail-label">備考</span>
+            <span class="detail-value" style="font-size:0.8rem;color:#445">${p.notes}</span>
+          </div>` : ''}
+        </div>
+        ${p.overview ? `
+        <div class="card-overview" id="ov${i}">${p.overview.replace(/\n/g, '<br>')}</div>
+        ${isLong ? `<button class="expand-btn" id="eb${i}" onclick="toggleOv(${i})">▼ 続きを見る</button>` : ''}
+        ` : ''}
+      </div>
+      <div class="card-footer">
+        ${statusBadge(p.status)}
+        <div class="footer-right">
+          ${p.date ? `<span class="card-date">${p.date}</span>` : ''}
+          ${p.docUrl ? `<a href="${p.docUrl}" target="_blank" rel="noopener" class="doc-link">&#128196; 資料</a>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleOv(i) {
+  const el  = document.getElementById('ov' + i);
+  const btn = document.getElementById('eb' + i);
+  el.classList.toggle('expanded');
+  btn.textContent = el.classList.contains('expanded') ? '▲ 閉じる' : '▼ 続きを見る';
+}
+
+// ── Render: 利回り ────────────────────────────────────────────
+function renderRimawari() {
+  const data = allProps.map(p => ({
+    ...p,
+    priceNum:  parsePrice(p.price),
+    incomeNum: parseAnnualIncome(p.cashflow),
+  })).map(p => ({
+    ...p,
+    yieldNum: calcYield(p.priceNum, p.incomeNum),
+  }));
+
+  const sorted = [...data].sort((a, b) => {
+    if (a.yieldNum === null && b.yieldNum === null) return 0;
+    if (a.yieldNum === null) return 1;
+    if (b.yieldNum === null) return -1;
+    return yieldAsc ? a.yieldNum - b.yieldNum : b.yieldNum - a.yieldNum;
+  });
+
+  const known    = sorted.filter(p => p.yieldNum !== null);
+  const maxYield = known.length ? Math.max(...known.map(p => p.yieldNum), 10) : 10;
+
+  let rank = 0;
+  document.getElementById('yieldTableBody').innerHTML = sorted.map(p => {
+    const hasYield = p.yieldNum !== null;
+    if (hasYield) rank++;
+    const rankStr = hasYield
+      ? `<span class="rank-cell rank-${rank}">${rank <= 3 ? ['&#9312;','&#9313;','&#9314;'][rank-1] : rank}</span>`
+      : '<span class="rank-cell">—</span>';
+
+    const yldCell = hasYield
+      ? `<div class="${'yield-num ' + yieldCls(p.yieldNum)}">${p.yieldNum.toFixed(1)}%</div>
+         <div class="yield-bar-wrap"><div class="yield-bar" style="width:${Math.min(100, p.yieldNum / maxYield * 100).toFixed(1)}%"></div></div>`
+      : `<span class="y-none">— <small>（収支データ不足）</small></span>`;
+
+    return `
+    <tr>
+      <td style="text-align:center">${rankStr}</td>
+      <td><strong>${p.address || '—'}</strong></td>
+      <td>${p.type || '—'}</td>
+      <td><strong>${p.price || '—'}</strong></td>
+      <td>${p.rooms || '—'}</td>
+      <td style="font-size:0.78rem;max-width:180px;color:#445;line-height:1.5">${p.cashflow || '—'}</td>
+      <td>${yldCell}</td>
+      <td>${statusBadge(p.status)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleYieldSort() {
+  yieldAsc = !yieldAsc;
+  document.getElementById('yieldSortHeader').textContent =
+    '表面利回り ' + (yieldAsc ? '▲' : '▽');
+  renderRimawari();
+}
+
+// ── Init ──────────────────────────────────────────────────────
+loadData();
+// Auto-refresh every 5 minutes
+setInterval(loadData, 5 * 60 * 1000);
+</script>
+
+</body>
+</html>
