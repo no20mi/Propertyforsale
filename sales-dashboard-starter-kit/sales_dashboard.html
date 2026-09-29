@@ -1,0 +1,694 @@
+<title>セールスアクション台帳</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans+JP:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+:root{
+  --ground:#f6f4ef;--surface:#ffffff;--surface-2:#efece4;
+  --ink:#1f2330;--ink-2:#5b6070;--ink-3:#8a8fa0;
+  --accent:#236f7d;--accent-soft:#d9e8ea;
+  --border:#e4e0d6;--border-strong:#d2cdbf;
+  --good:#2f7d5b;--good-soft:#dbeee4;
+  --warn:#b0741a;--warn-soft:#f3e6cf;
+  --crit:#bd4630;--crit-soft:#f4ded7;
+  --daito:#7a5ca8;--daito-soft:#e9e1f3;
+  --shadow:0 1px 2px rgba(31,35,48,.05),0 8px 24px -12px rgba(31,35,48,.14);
+  --radius:10px;
+  --c-fund:#3f6bd6;--c-am:#2f9e8f;--c-broker:#c77d1f;--c-dev:#8a5cc0;--c-integ:#4a7c3f;--c-consult:#c0567e;--c-other:#8a8fa0;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#13151b;--surface:#1b1e26;--surface-2:#22262f;
+  --ink:#e8e9ee;--ink-2:#a1a7b6;--ink-3:#727888;
+  --accent:#5bb6c6;--accent-soft:#1c3b40;
+  --border:#2b2f3a;--border-strong:#3a3f4c;
+  --good:#5ec08d;--good-soft:#1a3a2c;
+  --warn:#d99a44;--warn-soft:#3d2f18;
+  --crit:#e07a63;--crit-soft:#3f251e;
+  --daito:#b199db;--daito-soft:#2e2540;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -14px rgba(0,0,0,.6);
+  --c-fund:#6d92e8;--c-am:#4fc0b0;--c-broker:#e0a24e;--c-dev:#ab86dd;--c-integ:#77b366;--c-consult:#dd83a5;--c-other:#727888;
+}}
+:root[data-theme="dark"]{
+  --ground:#13151b;--surface:#1b1e26;--surface-2:#22262f;
+  --ink:#e8e9ee;--ink-2:#a1a7b6;--ink-3:#727888;
+  --accent:#5bb6c6;--accent-soft:#1c3b40;
+  --border:#2b2f3a;--border-strong:#3a3f4c;
+  --good:#5ec08d;--good-soft:#1a3a2c;
+  --warn:#d99a44;--warn-soft:#3d2f18;
+  --crit:#e07a63;--crit-soft:#3f251e;
+  --daito:#b199db;--daito-soft:#2e2540;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -14px rgba(0,0,0,.6);
+  --c-fund:#6d92e8;--c-am:#4fc0b0;--c-broker:#e0a24e;--c-dev:#ab86dd;--c-integ:#77b366;--c-consult:#dd83a5;--c-other:#727888;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.disp{font-family:"Archivo","IBM Plex Sans JP",sans-serif;font-weight:700;letter-spacing:-.01em}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+a{color:var(--accent)}
+
+.app{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
+.rail{position:sticky;top:0;align-self:start;height:100vh;background:var(--surface);
+  border-right:1px solid var(--border);padding:26px 18px;display:flex;flex-direction:column;gap:26px}
+.brand{display:flex;flex-direction:column;gap:3px}
+.brand .kicker{font:600 11px/1 "Archivo",sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+.brand .who{font-family:"Archivo",sans-serif;font-weight:800;font-size:19px;letter-spacing:-.02em}
+.brand .sub{font-size:11.5px;color:var(--ink-3)}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 11px;
+  border-radius:8px;font-size:13.5px;color:var(--ink-2);transition:background .12s,color .12s}
+.nav button .idx{font:600 10px/1 "IBM Plex Mono",monospace;color:var(--ink-3);width:16px}
+.nav button:hover{background:var(--surface-2);color:var(--ink)}
+.nav button[aria-current="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.nav button[aria-current="true"] .idx{color:var(--accent)}
+.rail .foot{margin-top:auto;font-size:11px;color:var(--ink-3);line-height:1.5}
+.themebtn{all:unset;cursor:pointer;font-size:11.5px;color:var(--ink-2);border:1px solid var(--border);
+  padding:5px 9px;border-radius:7px;margin-top:8px;display:inline-flex;gap:6px;align-items:center}
+.themebtn:hover{border-color:var(--border-strong);color:var(--ink)}
+
+.main{padding:34px 40px 80px;max-width:1200px}
+.view{display:none;animation:fade .25s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.vhead{margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.vhead .eyebrow{font:600 11px/1 "Archivo",sans-serif;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+.vhead h1{font-size:26px;margin-bottom:6px}
+.vhead p{font-size:13px;color:var(--ink-2);max-width:66ch}
+.src{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:var(--ink-3);
+  background:var(--surface-2);border:1px solid var(--border);padding:3px 9px;border-radius:999px}
+.src::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent)}
+
+.tiles{display:grid;gap:12px;margin-bottom:26px}
+.tiles.c2{grid-template-columns:repeat(2,1fr)}
+.tiles.c3{grid-template-columns:repeat(3,1fr)}
+.tiles.c4{grid-template-columns:repeat(4,1fr)}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 16px 14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px}
+.tile .lbl{font-size:11px;letter-spacing:.04em;color:var(--ink-3);text-transform:uppercase;font-family:"Archivo",sans-serif;font-weight:600}
+.tile .big{font-family:"Archivo",sans-serif;font-weight:800;font-size:30px;line-height:1;letter-spacing:-.02em}
+.tile .big small{font-size:14px;font-weight:600;color:var(--ink-3);margin-left:3px}
+.tile .note{font-size:11.5px;color:var(--ink-2)}
+.tile.hero{background:linear-gradient(160deg,var(--accent-soft),var(--surface));border-color:var(--accent-soft)}
+.tile.hero .big{color:var(--accent)}
+
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:22px;overflow:hidden}
+.panel > .ph{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.panel > .ph h2{font-size:14px;letter-spacing:.02em}
+.panel > .ph .meta{font-size:11.5px;color:var(--ink-3)}
+.panel .pb{padding:16px 18px}
+
+.barlist{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:170px 1fr 58px;align-items:center;gap:12px;font-size:12.5px}
+.bar .bname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2)}
+.bar .btrack{height:9px;background:var(--surface-2);border-radius:999px;overflow:hidden}
+.bar .bfill{height:100%;background:var(--accent);border-radius:999px}
+.bar .bval{text-align:right;color:var(--ink);font-weight:600}
+.bar .bval .pc{color:var(--ink-3);font-weight:400;font-size:11px}
+.bar.daito .bfill{background:var(--daito)}
+.bar[data-cat] .bfill{background:var(--catc)}
+
+.tablewrap{overflow-x:auto;border-top:1px solid var(--border)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+thead th{position:sticky;top:0;background:var(--surface-2);color:var(--ink-2);
+  font:600 11px/1.3 "Archivo",sans-serif;letter-spacing:.03em;text-transform:uppercase;
+  text-align:left;padding:9px 12px;white-space:nowrap;border-bottom:1px solid var(--border-strong)}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr.excluded{opacity:.55}
+tbody tr.excluded td.strike{text-decoration:line-through}
+.tablescroll{max-height:560px;overflow-y:auto}
+td .co{font-weight:600;color:var(--ink)}
+td .sub{color:var(--ink-3);font-size:11px}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.filters input[type=search]{font:inherit;font-size:13px;padding:8px 12px;border:1px solid var(--border-strong);
+  border-radius:8px;background:var(--surface);color:var(--ink);min-width:220px}
+.filters input[type=search]:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 8px;
+  border-radius:999px;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--border);white-space:nowrap}
+.chip.k-往訪{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.chip.k-来社{background:var(--good-soft);color:var(--good);border-color:transparent}
+.chip.k-meets{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.chip.daito{background:var(--daito-soft);color:var(--daito);border-color:transparent}
+.chip.cat{border-color:transparent;color:#fff}
+.pill{display:inline-block;padding:2px 7px;border-radius:6px;font-size:11px;font-weight:600;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.pill.g{background:var(--good-soft);color:var(--good)}
+.pill.w{background:var(--warn-soft);color:var(--warn)}
+.pill.c{background:var(--crit-soft);color:var(--crit)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+
+.seg{display:inline-flex;border:1px solid var(--border-strong);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.seg button{all:unset;cursor:pointer;padding:7px 12px;font-size:12px;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+
+/* monthly KPI cards */
+.mkpi{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:24px}
+.mcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px}
+.mcard .mh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
+.mcard .mt{font-weight:600;font-size:13px}
+.mcard .mtarget{font-size:11.5px;color:var(--ink-3)}
+.mcard .mfig{font-family:"Archivo",sans-serif;font-weight:800;font-size:34px;letter-spacing:-.02em;line-height:1}
+.mcard .mfig small{font-size:15px;color:var(--ink-3);font-weight:600}
+.mcard .mtrack{height:12px;background:var(--surface-2);border-radius:999px;overflow:hidden;margin-top:12px;position:relative}
+.mcard .mfill{height:100%;border-radius:999px;background:var(--accent)}
+.mcard .mfill.g{background:var(--good)}.mcard .mfill.w{background:var(--warn)}.mcard .mfill.c{background:var(--crit)}
+.mcard .mnote{font-size:11.5px;color:var(--ink-2);margin-top:9px}
+
+.kpi{display:flex;flex-direction:column}
+.krow{display:grid;grid-template-columns:150px 118px 1fr 150px;gap:18px;align-items:center;padding:15px 18px;border-bottom:1px solid var(--border)}
+.krow:last-child{border-bottom:0}
+.krow .kname{font-weight:600;font-size:13px}
+.krow .kfig{font-family:"Archivo",sans-serif;font-weight:800;font-size:22px;letter-spacing:-.02em}
+.krow .kfig small{font-size:11px;color:var(--ink-3);font-weight:600}
+.krow .ktrack{height:10px;background:var(--surface-2);border-radius:999px;overflow:hidden}
+.krow .kfill{height:100%;border-radius:999px;background:var(--accent)}
+.krow .kfill.g{background:var(--good)}.krow .kfill.w{background:var(--warn)}.krow .kfill.c{background:var(--crit)}
+.krow .kspark{height:34px}
+.kpct{font-size:11.5px;color:var(--ink-2);margin-top:3px}
+.klegend{display:flex;gap:16px;font-size:11px;color:var(--ink-3);padding:10px 18px}
+.klegend span{display:inline-flex;align-items:center;gap:5px}
+.klegend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+
+.callout{font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--border);
+  border-left:3px solid var(--accent);border-radius:8px;padding:11px 14px;margin-bottom:20px}
+.callout b{color:var(--ink)}
+.grouprow{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.grouprow.c3{grid-template-columns:repeat(3,1fr)}
+.legend-cats{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--ink-2);margin-top:4px}
+.legend-cats span{display:inline-flex;align-items:center}
+
+@media (max-width:1000px){
+  .app{grid-template-columns:1fr}
+  .rail{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:14px}
+  .rail .foot{display:none}
+  .nav{flex-direction:row;flex-wrap:wrap}
+  .main{padding:24px 18px 60px}
+  .tiles.c3,.tiles.c4{grid-template-columns:repeat(2,1fr)}
+  .mkpi{grid-template-columns:1fr}
+  .bar{grid-template-columns:120px 1fr 54px}
+  .krow{grid-template-columns:1fr 1fr;gap:10px}
+  .krow .kspark{grid-column:1/-1}
+  .grouprow,.grouprow.c3{grid-template-columns:1fr}
+}
+@media (max-width:560px){.tiles.c2,.tiles.c3,.tiles.c4{grid-template-columns:1fr}}
+</style>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <span class="kicker">Sales Ledger</span>
+      <span class="who" id="personDisplay"></span>
+      <span class="sub">営業アクション・成果管理</span>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-v="clients" aria-current="true"><span class="idx">01</span>クライアント属性</button>
+      <button data-v="meetings"><span class="idx">02</span>営業アクション数</button>
+      <button data-v="kpi"><span class="idx">03</span>個人予実</button>
+      <button data-v="cases"><span class="idx">04</span>案件管理</button>
+    </nav>
+    <div class="foot">
+      データ取得日<br><span class="mono" id="gendate"></span>
+      <br><button class="themebtn" id="themebtn">◐ テーマ切替</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- 01 CLIENTS -->
+    <section class="view active" id="view-clients">
+      <div class="vhead">
+        <div class="eyebrow">01 — Client Attributes</div>
+        <h1>クライアント属性</h1>
+        <p>名刺出力データから抽出した全接点先。会社名から業態を6分類（ファンド／AM／仲介／デベロッパー／総合不動産／不動産コンサルタント）し、その割合も表示します。</p>
+        <div class="src" id="cardsSrc">名刺出力CSV</div>
+      </div>
+      <div class="tiles c4" id="clientTiles"></div>
+      <div class="panel">
+        <div class="ph"><h2>顧客属性の割合</h2>
+          <span class="seg" id="attrMode">
+            <button data-m="company" aria-pressed="true">企業数ベース</button>
+            <button data-m="card">名刺枚数ベース</button>
+          </span>
+        </div>
+        <div class="pb"><div class="barlist" id="clientAttrBars"></div></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h2>企業別 名刺枚数 &nbsp;<span class="meta">上位15社</span></h2></div>
+        <div class="pb"><div class="barlist" id="companyBars"></div></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h2>名刺一覧</h2><span class="meta" id="clientCount"></span></div>
+        <div class="pb">
+          <div class="filters">
+            <input type="search" id="clientSearch" placeholder="会社・氏名・役職・メールで検索">
+            <span class="seg" id="clientAttrFilter"></span>
+          </div>
+          <span class="chip" id="clientShown" style="background:transparent"></span>
+        </div>
+        <div class="tablewrap"><div class="tablescroll">
+          <table id="clientTable">
+            <thead><tr><th>会社名</th><th>属性</th><th>部署 / 役職</th><th>氏名</th><th>所在地</th><th>連絡先</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- 02 MEETINGS -->
+    <section class="view" id="view-meetings">
+      <div class="vhead">
+        <div class="eyebrow">02 — Sales Actions</div>
+        <h1>営業アクション数</h1>
+        <p>Google カレンダー（<span id="calendarEmailLabel"></span>）の自カレンダー予定のうち、件名が（往訪）（来社）（meets）のもの。<span id="excludeNote"></span></p>
+        <div class="src">Google カレンダー — <span id="srcMonthLabel"></span></div>
+      </div>
+
+      <h2 class="disp" style="font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px">毎月のKPI（<span id="kpiMonthHeading"></span>）</h2>
+      <div class="mkpi" id="mkpi"></div>
+      <div class="panel" id="hotPanel">
+        <div class="ph"><h2>ホット案件の内訳</h2><span class="meta" id="hotDefLabel"></span></div>
+        <div class="tablewrap"><table id="hotTable">
+          <thead><tr><th>顧客名</th><th>業態</th><th>案件名</th><th>エリア</th><th>AA列（更新日）</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+
+      <div class="tiles c4" id="meetTiles"></div>
+      <div class="callout" id="meetCallout"></div>
+      <div class="panel">
+        <div class="ph"><h2>打ち合わせ明細</h2><span class="meta" id="meetMeta"></span></div>
+        <div class="tablewrap">
+          <table id="meetTable">
+            <thead><tr><th>日付</th><th>区分</th><th>件名</th><th>出欠</th><th>計上</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 KPI -->
+    <section class="view" id="view-kpi">
+      <div class="vhead">
+        <div class="eyebrow">03 — Personal Plan vs. Actual</div>
+        <h1>個人予実</h1>
+        <p>個人予実シートの担当者ブロックから抽出した重要指標。各指標の当月（<span id="kpiMonthP"></span>）の目標・実績・達成率と、12か月の推移。</p>
+        <div class="src" id="kpiSrc">個人予実シート</div>
+      </div>
+      <div class="seg" id="kpiSeg" style="margin-bottom:18px">
+        <button data-m="cur" aria-pressed="true" id="kpiSegCur">当月</button>
+        <button data-m="all">12か月推移</button>
+      </div>
+      <div class="panel">
+        <div class="ph"><h2 id="kpiPanelTitle">当月サマリー</h2><span class="meta">目標 / 実績 / 達成率</span></div>
+        <div class="kpi" id="kpiBody"></div>
+        <div class="klegend"><span><i style="background:var(--accent)"></i>実績</span><span><i style="background:var(--ink-3)"></i>目標ライン</span></div>
+      </div>
+      <div class="callout">
+        <b>補足：</b>指標によっては個人ブロックにチーム規模の数値が入っている場合があり、他指標とスケールが異なることがあります。シート表示値をそのまま掲載しています。
+      </div>
+    </section>
+
+    <!-- 04 CASES -->
+    <section class="view" id="view-cases">
+      <div class="vhead">
+        <div class="eyebrow">04 — Deal Pipeline</div>
+        <h1>案件管理</h1>
+        <p>案件管理シートで案件推進者列が自分の案件。アセットタイプ（案件名列）・案件属性（取得区分・現況区分）、進捗・確度、顧客の業態内訳と全件一覧。</p>
+        <div class="src" id="casesSrc">案件管理シート</div>
+      </div>
+      <div class="tiles c4" id="caseTiles"></div>
+
+      <h2 class="disp" style="font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:6px 0 12px">アセットタイプ・案件属性</h2>
+      <div class="grouprow c3">
+        <div class="panel">
+          <div class="ph"><h2>アセットタイプ別</h2><span class="meta">I列（案件名）から判定</span></div>
+          <div class="pb"><div class="barlist" id="caseKindBars"></div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><h2>取得区分</h2><span class="meta">取得済み / 取得前</span></div>
+          <div class="pb"><div class="barlist" id="caseAcqBars"></div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><h2>現況区分</h2><span class="meta">開発（着工前・着工中）/ 既築</span></div>
+          <div class="pb"><div class="barlist" id="caseGenkyoBars"></div></div>
+        </div>
+      </div>
+
+      <h2 class="disp" style="font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:6px 0 12px">内訳</h2>
+      <div class="grouprow">
+        <div class="panel">
+          <div class="ph"><h2>進捗ステージ別</h2></div>
+          <div class="pb"><div class="barlist" id="caseProgBars"></div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><h2>確度別</h2></div>
+          <div class="pb"><div class="barlist" id="caseKakudoBars"></div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><h2>顧客の業態別</h2></div>
+          <div class="pb"><div class="barlist" id="caseClientAttrBars"></div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><h2>顧客属性（シート値）別</h2></div>
+          <div class="pb"><div class="barlist" id="caseCustBars"></div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ph"><h2>案件一覧</h2><span class="meta" id="caseCount"></span></div>
+        <div class="pb">
+          <div class="filters">
+            <input type="search" id="caseSearch" placeholder="顧客名・案件名・エリアで検索">
+            <span class="seg" id="caseProgFilter"></span>
+          </div>
+        </div>
+        <div class="tablewrap"><div class="tablescroll">
+          <table id="caseTable">
+            <thead><tr><th>進捗</th><th>顧客名</th><th>業態</th><th>案件名 / 建物</th><th>種別</th><th>取得</th><th>現況</th><th>エリア</th><th>確度</th><th>AA列</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script id="data" type="application/json">{"generated": "2026-09-29", "cards": [{"company": "サンプル建託株式会社", "dept": "", "title": "支店長", "name": "山田 太郎", "zip": "100-0001", "addr": "東京都千代田区千代田1-1", "tel": "03-1111-2222", "fax": "", "email": "yamada@sample-kentaku.example.jp", "attr": "その他"}, {"company": "サンプルハウス工業株式会社", "dept": "開発部", "title": "部長", "name": "鈴木 花子", "zip": "530-0001", "addr": "大阪府大阪市北区梅田1-1", "tel": "06-1111-2222", "fax": "", "email": "suzuki@sample-house.example.jp", "attr": "デベロッパー"}, {"company": "サンプル都市開発株式会社", "dept": "", "title": "担当", "name": "佐藤 次郎", "zip": "107-0052", "addr": "東京都港区赤坂1-1-1", "tel": "03-2222-3333", "fax": "", "email": "sato@sample-toshikaihatsu.example.jp", "attr": "総合不動産"}, {"company": "サンプルアセットマネジメント株式会社", "dept": "投資運用部", "title": "マネージャー", "name": "田中 一郎", "zip": "103-0027", "addr": "東京都中央区日本橋1-1", "tel": "03-3333-4444", "fax": "", "email": "tanaka@sample-am.example.jp", "attr": "AM"}, {"company": "サンプルキャピタル株式会社", "dept": "", "title": "代表取締役", "name": "高橋 美咲", "zip": "106-0032", "addr": "東京都港区六本木1-1", "tel": "03-4444-5555", "fax": "", "email": "takahashi@sample-capital.example.jp", "attr": "ファンド"}, {"company": "サンプル不動産販売株式会社", "dept": "仲介営業部", "title": "課長", "name": "伊藤 healthy", "zip": "160-0022", "addr": "東京都新宿区新宿1-1", "tel": "03-5555-6666", "fax": "", "email": "ito@sample-fudosan.example.jp", "attr": "仲介"}, {"company": "サンプルコンサルティング株式会社", "dept": "", "title": "コンサルタント", "name": "渡辺 誠", "zip": "150-0001", "addr": "東京都渋谷区神宮前1-1", "tel": "03-6666-7777", "fax": "", "email": "watanabe@sample-consul.example.jp", "attr": "不動産コンサルタント"}, {"company": "株式会社サンプルホテルズ", "dept": "", "title": "支配人", "name": "中村 恵", "zip": "460-0008", "addr": "愛知県名古屋市中区栄1-1", "tel": "052-111-2222", "fax": "", "email": "nakamura@sample-hotels.example.jp", "attr": "その他"}], "cardCompanyCounts": [["サンプル建託株式会社", 1], ["サンプルハウス工業株式会社", 1], ["サンプル都市開発株式会社", 1], ["サンプルアセットマネジメント株式会社", 1], ["サンプルキャピタル株式会社", 1], ["サンプル不動産販売株式会社", 1], ["サンプルコンサルティング株式会社", 1], ["株式会社サンプルホテルズ", 1]], "cardPrefCounts": [["東京都", 6], ["大阪府", 1], ["愛知県", 1]], "cardAttrByCard": [["その他", 2], ["デベロッパー", 1], ["総合不動産", 1], ["AM", 1], ["ファンド", 1], ["仲介", 1], ["不動産コンサルタント", 1]], "cardAttrByCompany": [["その他", 2], ["デベロッパー", 1], ["総合不動産", 1], ["AM", 1], ["ファンド", 1], ["仲介", 1], ["不動産コンサルタント", 1]], "attrCats": ["ファンド", "AM", "仲介", "デベロッパー", "総合不動産", "不動産コンサルタント", "その他"], "kpi": {"months": ["2026/09", "2026/10", "2026/11", "2026/12", "2027/01", "2027/02", "2027/03", "2027/04", "2027/05", "2027/06", "2027/07", "2027/08"], "blocks": {"新規開業室数": {"目標": ["8", "8", "8", "8", "8", "8", "8", "8", "8", "8", "8", "8"], "実績": ["2", "3", "4", "2", "3", "4", "2", "3", "4", "2", "3", "4"], "差分": ["0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"], "達成率": ["—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—"], "月日数進捗差分率": ["—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—"]}, "契約室数": {"目標": ["6", "6", "6", "6", "6", "6", "6", "6", "6", "6", "6", "6"], "実績": ["1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3"], "差分": ["0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"], "達成率": ["—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—"], "月日数進捗差分率": ["—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—"]}, "案件獲得数": {"目標": ["20", "20", "20", "20", "20", "20", "20", "20", "20", "20", "20", "20"], "実績": ["14", "15", "16", "14", "15", "16", "14", "15", "16", "14", "15", "16"], "差分": ["0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"], "達成率": ["—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—"], "月日数進捗差分率": ["—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—"]}}}, "cases": [{"id": "S-001", "progress": "D_CL検討", "attr": "1. 直接提案", "custAttr": "所有者", "customer": "サンプル建託株式会社", "contract": "サンプル建託株式会社", "name": "｜東京都千代田区千代田1丁目ホテル", "getter": "岩野", "kakudo": "D：担当者が提案を魅力的に感じている（賃料目線が目標に達している）", "genkyo": "着工前", "acq": "取得前", "aa": "", "hot": false, "type": "ホテル", "kind": "ホテル", "area": "東京都千代田区千代田1丁目", "building": "サンプルビル千代田", "clientAttr": "その他"}, {"id": "S-002", "progress": "C_口頭合意", "attr": "1. 直接提案", "custAttr": "紹介者", "customer": "サンプルハウス工業株式会社", "contract": "サンプルハウス工業株式会社", "name": "｜大阪府大阪市北区梅田1丁目レジデンス", "getter": "岩野", "kakudo": "C：担当者は前向きだが社内稟議が必要", "genkyo": "既築", "acq": "取得済", "aa": "", "hot": false, "type": "レジデンス", "kind": "レジデンス", "area": "大阪府大阪市北区梅田1丁目", "building": "サンプルレジデンス梅田", "clientAttr": "デベロッパー"}, {"id": "S-003", "progress": "D_CL検討", "attr": "2. 売買可能（仲手有）", "custAttr": "仲介者", "customer": "サンプル都市開発株式会社", "contract": "サンプル都市開発株式会社", "name": "｜東京都港区赤坂1丁目ホテル", "getter": "岩野", "kakudo": "D：担当者が提案を魅力的に感じている（賃料目線が目標に達している）", "genkyo": "着工中", "acq": "取得前", "aa": "2026/09/01", "hot": true, "type": "ホテル", "kind": "ホテル", "area": "東京都港区赤坂1丁目", "building": "サンプルビル赤坂", "clientAttr": "総合不動産"}], "caseKindCounts": [["ホテル", 2], ["レジデンス", 1]], "caseClientAttr": [["その他", 1], ["デベロッパー", 1], ["総合不動産", 1]], "caseAcqCounts": [["取得前", 2], ["取得済", 1]], "caseGenkyoCounts": [["着工前", 1], ["既築", 1], ["着工中", 1]], "meetings": [{"type": "往訪", "date": "2026-09-03", "title": "（往訪）サンプル建託株式会社 山田様", "status": "承諾", "daito": true}, {"type": "往訪", "date": "2026-09-05", "title": "（往訪）サンプルハウス工業株式会社 鈴木様", "status": "", "daito": false}, {"type": "来社", "date": "2026-09-08", "title": "（来社）サンプル都市開発株式会社 佐藤様", "status": "承諾", "daito": false}, {"type": "meets", "date": "2026-09-10", "title": "(meets) サンプルアセットマネジメント株式会社 田中様", "status": "承諾", "daito": false}, {"type": "meets", "date": "2026-09-12", "title": "(meets/対面) Pjt_サンプル建託連携", "status": "承諾", "daito": true}], "meetingMonth": "2026-09", "monthlyKPI": {"apo": {"actual": 3, "target": 30, "label": "アポ（大東建託株式会社以外）"}, "hot": {"actual": 1, "target": 10, "label": "ホット案件（確度D・当月）"}}, "hotCases": [{"customer": "サンプル都市開発株式会社", "name": "｜東京都港区赤坂1丁目ホテル", "area": "東京都港区赤坂1丁目", "aa": "2026/09/01", "clientAttr": "総合不動産"}], "config": {"person": "岩野", "personDisplay": "岩野 希美", "calendarEmail": "nozomi.iwano@unito.me", "excludeCompanyName": "大東建託株式会社", "excludeCompanyRegex": "大[東都]建託", "hotDef": "確度が指定プレフィックスで始まり、かつ更新日（AA列）が当月の案件"}, "cardsSrcFile": "cards_sample.csv", "kpiSrcLabel": "個人予実シート", "casesSrcLabel": "cases_sample.csv"}</script>
+<script>
+const D=JSON.parse(document.getElementById('data').textContent);
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num=n=>Number(n).toLocaleString('ja-JP');
+const pctOf=(v,t)=>t?Math.round(v/t*1000)/10:0;
+
+const CATCOLOR={'ファンド':'var(--c-fund)','AM':'var(--c-am)','仲介':'var(--c-broker)','デベロッパー':'var(--c-dev)','総合不動産':'var(--c-integ)','不動産コンサルタント':'var(--c-consult)','その他':'var(--c-other)'};
+
+$('#gendate').textContent=D.generated;
+
+const CFG=Object.assign({person:'',personDisplay:'',calendarEmail:'',
+  excludeCompanyName:'',excludeCompanyRegex:'',hotDef:''},D.config||{});
+const EXCLUDE_RE=CFG.excludeCompanyRegex?new RegExp(CFG.excludeCompanyRegex):null;
+const isExcluded=name=>EXCLUDE_RE?EXCLUDE_RE.test(name||''):false;
+$('#personDisplay').textContent=CFG.personDisplay||CFG.person||'（担当者名未設定）';
+$('#calendarEmailLabel').textContent=CFG.calendarEmail||'（未設定）';
+$('#excludeNote').textContent=CFG.excludeCompanyName
+  ?`${CFG.excludeCompanyName}のアポは記録に残しますが、アクション数には計上しません。`
+  :'';
+$('#hotDefLabel').textContent=CFG.hotDef||'';
+if(D.cardsSrcFile)$('#cardsSrc').textContent=D.cardsSrcFile;
+if(D.kpiSrcLabel)$('#kpiSrc').textContent=D.kpiSrcLabel;
+if(D.casesSrcLabel)$('#casesSrc').textContent=D.casesSrcLabel;
+
+(function(){
+  const root=document.documentElement;
+  let saved;try{saved=localStorage.getItem('sl-theme')}catch(e){}
+  if(saved)root.setAttribute('data-theme',saved);
+  $('#themebtn').addEventListener('click',()=>{
+    const cur=root.getAttribute('data-theme');
+    const next=cur==='dark'?'light':cur==='light'?'dark':(matchMedia('(prefers-color-scheme:dark)').matches?'light':'dark');
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem('sl-theme',next)}catch(e){}
+  });
+})();
+
+$('#nav').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  $$('#nav button').forEach(x=>x.setAttribute('aria-current',x===b));
+  $$('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+b.dataset.v));
+  try{localStorage.setItem('sl-view',b.dataset.v)}catch(e){}
+  window.scrollTo(0,0);
+});
+(function(){let v;try{v=localStorage.getItem('sl-view')}catch(e){}
+ if(v){const b=$('#nav button[data-v="'+v+'"]');if(b)b.click();}})();
+
+function bar(name,val,max,opt){
+  opt=opt||{};
+  const pct=max?Math.round(val/max*100):0;
+  const style=opt.cat?`--catc:${CATCOLOR[name]||'var(--accent)'}`:'';
+  const share=opt.total?`<span class="pc"> ${pctOf(val,opt.total)}%</span>`:'';
+  return `<div class="bar${opt.daito?' daito':''}" ${opt.cat?'data-cat="1"':''} style="${style}">
+    <span class="bname" title="${esc(name)}">${opt.cat?`<span class="dot" style="background:${CATCOLOR[name]||'var(--accent)'}"></span>`:''}${esc(name)}</span>
+    <span class="btrack"><span class="bfill" style="width:${pct}%"></span></span>
+    <span class="bval num">${num(val)}${share}</span></div>`;
+}
+function tile(lbl,big,note,hero){
+  return `<div class="tile${hero?' hero':''}"><span class="lbl">${esc(lbl)}</span>
+    <span class="big num">${big}</span>${note?`<span class="note">${note}</span>`:''}</div>`;
+}
+
+/* ===== 01 CLIENTS ===== */
+(function(){
+  const cards=D.cards;
+  const companies=D.cardCompanyCounts.length;
+  const withMail=cards.filter(c=>c.email).length;
+  const topPref=D.cardPrefCounts[0];
+  $('#clientTiles').innerHTML=[
+    tile('総名刺数',num(cards.length),'接点のある担当者数',true),
+    tile('企業数',num(companies),'ユニークな会社名'),
+    tile('メール保有',Math.round(withMail/cards.length*100)+'<small>%</small>',num(withMail)+' 件'),
+    tile('最多エリア',topPref[0].replace(/[都府県]$/,''),num(topPref[1])+' 名刺 / '+D.cardPrefCounts.length+' 都道府県'),
+  ].join('');
+
+  const attrBars=$('#clientAttrBars');
+  function renderAttr(mode){
+    const data=mode==='card'?D.cardAttrByCard:D.cardAttrByCompany;
+    const total=data.reduce((s,[,v])=>s+v,0);
+    const max=data[0][1];
+    attrBars.innerHTML=data.map(([n,v])=>bar(n,v,max,{cat:true,total})).join('');
+  }
+  $('#attrMode').addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    $$('#attrMode button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    renderAttr(b.dataset.m);
+  });
+  renderAttr('company');
+
+  const cmax=D.cardCompanyCounts[0][1];
+  $('#companyBars').innerHTML=D.cardCompanyCounts.slice(0,15)
+    .map(([n,v])=>bar(n,v,cmax,{daito:isExcluded(n)})).join('');
+
+  // attr filter seg
+  const af=$('#clientAttrFilter');
+  af.innerHTML=['すべて',...D.attrCats].map((s,i)=>`<button data-a="${i===0?'':esc(s)}" aria-pressed="${i===0}">${esc(s)}</button>`).join('');
+  let curAttr='';
+  af.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    $$('#clientAttrFilter button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    curAttr=b.dataset.a;render();});
+
+  const tb=$('#clientTable tbody'), sh=$('#clientShown');
+  let q='';
+  function render(){
+    const s=q.trim().toLowerCase();
+    const rows=cards.filter(c=>(!curAttr||c.attr===curAttr)
+      && (!s||[c.company,c.name,c.title,c.dept,c.email,c.addr].join(' ').toLowerCase().includes(s)));
+    sh.textContent=`表示 ${num(rows.length)} / ${num(cards.length)} 件`;
+    tb.innerHTML=rows.map(c=>`<tr>
+      <td><span class="co">${esc(c.company)||'—'}</span></td>
+      <td><span class="chip cat" style="background:${CATCOLOR[c.attr]}">${esc(c.attr)}</span></td>
+      <td>${esc(c.dept)||''}${c.dept&&c.title?'<br>':''}<span class="${c.dept?'sub':''}">${esc(c.title)}</span></td>
+      <td>${esc(c.name)||'—'}</td>
+      <td>${esc(c.addr)?`<span class="sub">${esc(c.zip)}</span><br>${esc(c.addr)}`:'—'}</td>
+      <td>${c.email?esc(c.email):''}${c.email&&c.tel?'<br>':''}${c.tel?`<span class="sub">${esc(c.tel)}</span>`:''}</td>
+    </tr>`).join('')||`<tr><td colspan="6" style="color:var(--ink-3);padding:22px 12px">該当なし</td></tr>`;
+  }
+  $('#clientCount').textContent=num(cards.length)+' 件';
+  render();
+  let t;$('#clientSearch').addEventListener('input',e=>{q=e.target.value;clearTimeout(t);t=setTimeout(render,120)});
+})();
+
+/* ===== 02 MEETINGS ===== */
+(function(){
+  const M=D.meetings;
+  const [_my,_mm]=(D.meetingMonth||'2026-08').split('-');
+  const monthJP=`${_my}年${+_mm}月`;
+  $('#srcMonthLabel').textContent=monthJP;
+  $('#kpiMonthHeading').textContent=monthJP;
+  const counted=M.filter(m=>!m.daito);
+  const byKind=k=>M.filter(m=>m.type===k);
+  const countedByKind=k=>counted.filter(m=>m.type===k).length;
+
+  // monthly KPI
+  const mk=D.monthlyKPI;
+  function mcard(o){
+    const p=pctOf(o.actual,o.target);
+    const cls=p>=100?'g':p>=70?'':p>=40?'w':'c';
+    const w=Math.min(p,100);
+    return `<div class="mcard">
+      <div class="mh"><span class="mt">${esc(o.label)}</span><span class="mtarget">月間目標 ${num(o.target)}</span></div>
+      <div class="mfig num">${num(o.actual)}<small> / ${num(o.target)}</small></div>
+      <div class="mtrack"><div class="mfill ${cls}" style="width:${w}%"></div></div>
+      <div class="mnote">達成率 ${p}%${o.actual>=o.target?'　🎯 目標達成':`　あと ${num(Math.max(o.target-o.actual,0))} 件`}</div>
+    </div>`;
+  }
+  $('#mkpi').innerHTML=mcard(mk.apo)+mcard(mk.hot);
+
+  const hc=D.hotCases||[];
+  $('#hotTable tbody').innerHTML=hc.length?hc.map(c=>`<tr>
+      <td><span class="co">${esc(c.customer)||'—'}</span></td>
+      <td><span class="chip cat" style="background:${CATCOLOR[c.clientAttr]}">${esc(c.clientAttr)}</span></td>
+      <td>${esc(c.name)||'—'}</td>
+      <td>${esc(c.area)||'—'}</td>
+      <td class="num">${esc(c.aa)||'—'}</td>
+    </tr>`).join(''):`<tr><td colspan="5" style="color:var(--ink-3);padding:18px 12px">当月に確度Dへ更新された案件はまだありません</td></tr>`;
+
+  $('#meetTiles').innerHTML=[
+    tile('計上アクション数',num(counted.length),(CFG.excludeCompanyName?CFG.excludeCompanyName+'を除く ':'')+'打ち合わせ',true),
+    tile('往訪',`${countedByKind('往訪')}<small> / ${byKind('往訪').length}</small>`,'計上 / 総数'),
+    tile('来社',`${countedByKind('来社')}<small> / ${byKind('来社').length}</small>`,'計上 / 総数'),
+    tile('meets',`${countedByKind('meets')}<small> / ${byKind('meets').length}</small>`,'計上 / 総数'),
+  ].join('');
+
+  const daito=M.filter(m=>m.daito).length;
+  $('#meetCallout').innerHTML=CFG.excludeCompanyName
+    ? `${monthJP}の該当予定は <b>全${M.length}件</b>。うち${esc(CFG.excludeCompanyName)}が <b>${daito}件</b> で、これらを除いた <b>${counted.length}件</b> をアクション数として計上しています。`
+    : `${monthJP}の該当予定は <b>全${M.length}件</b>。すべてアクション数として計上しています。`;
+  $('#meetMeta').textContent=CFG.excludeCompanyName
+    ? `全${M.length}件 — ${CFG.excludeCompanyName} ${daito}件は計上対象外`
+    : `全${M.length}件`;
+
+  const order={往訪:0,来社:1,meets:2};
+  const rows=[...M].sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:order[a.type]-order[b.type]);
+  $('#meetTable tbody').innerHTML=rows.map(m=>{
+    const d=m.date.slice(5).replace('-','/');
+    const st=m.status?`<span class="pill${m.status==='辞退'?' c':m.status==='承諾'?' g':''}">${esc(m.status)}</span>`:'<span class="sub">—</span>';
+    return `<tr class="${m.daito?'excluded':''}">
+      <td class="num">${d}</td>
+      <td><span class="chip k-${m.type}">${m.type}</span></td>
+      <td class="strike">${esc(m.title)}${m.daito?` <span class="chip daito">${esc(CFG.excludeCompanyName||'対象外')}</span>`:''}</td>
+      <td>${st}</td>
+      <td>${m.daito?'<span class="pill c">対象外</span>':'<span class="pill g">計上</span>'}</td>
+    </tr>`;
+  }).join('');
+})();
+
+/* ===== 03 KPI ===== */
+(function(){
+  const K=D.kpi, months=K.months, names=Object.keys(K.blocks);
+  const p=v=>parseFloat(String(v).replace(/[^0-9.\-]/g,''))||0;
+  const seg=$('#kpiSeg'), body=$('#kpiBody'), title=$('#kpiPanelTitle');
+  const curMonth=(D.meetingMonth||'2026-08').replace('-','/');
+  let curIdx=months.indexOf(curMonth); if(curIdx<0)curIdx=0;
+  $('#kpiSegCur').textContent=months[curIdx]+'（当月）';
+  $('#kpiMonthP').textContent=months[curIdx];
+  function spark(goal,act,mark=0){
+    const w=160,h=34,n=goal.length,pad=3;
+    const mx=Math.max(...goal,...act,1);
+    const X=i=>pad+i*(w-2*pad)/(n-1), Y=v=>h-pad-(v/mx)*(h-2*pad);
+    const gline=goal.map((v,i)=>`${X(i)},${Y(v)}`).join(' ');
+    const aline=act.map((v,i)=>`${X(i)},${Y(v)}`).join(' ');
+    const afill=`${X(0)},${h-pad} ${aline} ${X(n-1)},${h-pad}`;
+    return `<svg class="kspark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
+      <polygon points="${afill}" fill="var(--accent)" opacity=".14"/>
+      <polyline points="${gline}" fill="none" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 2"/>
+      <polyline points="${aline}" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+      <circle cx="${X(mark)}" cy="${Y(act[mark]||0)}" r="2.4" fill="var(--accent)"/></svg>`;
+  }
+  const cls=pct=>pct>=100?'g':pct>=60?'':pct>=30?'w':'c';
+  function renderMonth(mi){
+    title.textContent=months[mi]+' の目標 / 実績';
+    body.innerHTML=names.map(nm=>{
+      const b=K.blocks[nm];
+      const goal=p(b['目標'][mi]), act=p(b['実績'][mi]);
+      const rate=b['達成率'][mi]||(goal?Math.round(act/goal*100)+'%':'—');
+      const pct=goal?Math.min(act/goal*100,100):0;
+      return `<div class="krow">
+        <div class="kname">${esc(nm)}</div>
+        <div><div class="kfig num">${num(act)}<small> / ${num(goal)}</small></div><div class="kpct num">達成率 ${esc(rate)}</div></div>
+        <div class="ktrack"><div class="kfill ${cls(pct)}" style="width:${pct}%"></div></div>
+        ${spark(b['目標'].map(p),b['実績'].map(p),mi)}</div>`;
+    }).join('');
+  }
+  function renderAll(){
+    title.textContent='12か月推移（実績）';
+    body.innerHTML=names.map(nm=>{
+      const b=K.blocks[nm];
+      const gArr=b['目標'].map(p), aArr=b['実績'].map(p);
+      const tot=aArr.reduce((s,x)=>s+x,0), gtot=gArr.reduce((s,x)=>s+x,0);
+      return `<div class="krow">
+        <div class="kname">${esc(nm)}</div>
+        <div><div class="kfig num">${num(tot)}<small> / ${num(gtot)}</small></div><div class="kpct">通年 実績 / 目標</div></div>
+        <div class="ktrack"><div class="kfill ${cls(gtot?tot/gtot*100:0)}" style="width:${gtot?Math.min(tot/gtot*100,100):0}%"></div></div>
+        ${spark(gArr,aArr)}</div>`;
+    }).join('');
+  }
+  seg.addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    $$('#kpiSeg button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    b.dataset.m==='all'?renderAll():renderMonth(curIdx);
+  });
+  renderMonth(curIdx);
+})();
+
+/* ===== 04 CASES ===== */
+(function(){
+  const C=D.cases;
+  const cnt=f=>{const m={};C.forEach(c=>{const k=f(c)||'（未設定）';m[k]=(m[k]||0)+1});return Object.entries(m).sort((a,b)=>b[1]-a[1]);};
+  const prog=cnt(c=>c.progress);
+  const hot=C.filter(c=>c.hot).length;
+  const acquired=C.filter(c=>c.acq==='取得済').length;
+  const dev=C.filter(c=>c.genkyo==='着工前'||c.genkyo==='着工中').length;
+
+  const tiles4=[
+    tile('担当案件数',num(C.length),'案件推進者 = '+(CFG.person||'自分'),true),
+    tile('ホット案件',`${num(hot)}<small> / ${num(D.monthlyKPI.hot.target)}</small>`,'当月ホット / 月間目標'),
+    tile('取得済み',num(acquired),`開発中 ${num(dev)} 件`),
+  ];
+  if(CFG.excludeCompanyName) tiles4.push(
+    tile(`${CFG.excludeCompanyName} 案件`,num(C.filter(c=>isExcluded(c.customer)).length),'顧客名ベース'));
+  $('#caseTiles').className='tiles '+(tiles4.length>=4?'c4':'c3');
+  $('#caseTiles').innerHTML=tiles4.join('');
+
+  const barsInto=(el,data,opt)=>{const mx=data[0][1];const total=data.reduce((s,[,v])=>s+v,0);
+    $(el).innerHTML=data.map(([n,v])=>bar(n,v,mx,Object.assign({total},opt))).join('');};
+
+  barsInto('#caseKindBars',D.caseKindCounts);
+  barsInto('#caseAcqBars',D.caseAcqCounts);
+  barsInto('#caseGenkyoBars',D.caseGenkyoCounts);
+  barsInto('#caseProgBars',prog,{});
+  barsInto('#caseKakudoBars',cnt(c=>c.kakudo?c.kakudo.split('：')[0]:'（未設定）'));
+  barsInto('#caseClientAttrBars',D.caseClientAttr,{cat:true});
+  barsInto('#caseCustBars',cnt(c=>c.custAttr));
+
+  const fseg=$('#caseProgFilter');
+  const stages=['すべて',...prog.map(p=>p[0])];
+  fseg.innerHTML=stages.map((s,i)=>`<button data-s="${i===0?'':esc(s)}" aria-pressed="${i===0}">${esc(s)}</button>`).join('');
+  let curStage='';
+  fseg.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    $$('#caseProgFilter button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    curStage=b.dataset.s;render();});
+
+  const tb=$('#caseTable tbody');
+  let q='';
+  function render(){
+    const s=q.trim().toLowerCase();
+    const rows=C.filter(c=>(!curStage||c.progress===curStage)
+      && (!s||[c.customer,c.contract,c.name,c.building,c.area,c.type].join(' ').toLowerCase().includes(s)));
+    $('#caseCount').textContent=`${num(rows.length)} / ${num(C.length)} 件`;
+    tb.innerHTML=rows.map(c=>{
+      const k=c.kakudo?c.kakudo.split('：')[0]:'';
+      return `<tr>
+        <td><span class="pill">${esc(c.progress||'（未設定）')}</span></td>
+        <td><span class="co">${esc(c.customer)||'—'}</span>${c.hot?' <span class="chip" style="background:var(--crit-soft);color:var(--crit);border-color:transparent">🔥 ホット</span>':''}${isExcluded(c.customer)?` <span class="chip daito">${esc(CFG.excludeCompanyName||'対象外')}</span>`:''}</td>
+        <td><span class="chip cat" style="background:${CATCOLOR[c.clientAttr]}">${esc(c.clientAttr)}</span></td>
+        <td>${esc(c.name)||'—'}${c.building?`<br><span class="sub">${esc(c.building)}</span>`:''}</td>
+        <td>${esc(c.type)||'—'}</td>
+        <td>${c.acq?`<span class="pill ${c.acq==='取得済'?'g':''}">${esc(c.acq)}</span>`:'—'}</td>
+        <td>${c.genkyo?`<span class="pill ${c.genkyo==='既築'?'':'w'}">${esc(c.genkyo)}</span>`:'—'}</td>
+        <td>${esc(c.area)||'—'}</td>
+        <td>${k?`<span class="pill ${k==='A'?'g':k==='D'?'w':''}">${esc(k)}</span>`:'<span class="sub">—</span>'}</td>
+        <td class="num">${esc(c.aa)||'<span class="sub">—</span>'}</td>
+      </tr>`;
+    }).join('')||`<tr><td colspan="10" style="color:var(--ink-3);padding:22px 12px">該当なし</td></tr>`;
+  }
+  let t;$('#caseSearch').addEventListener('input',e=>{q=e.target.value;clearTimeout(t);t=setTimeout(render,120)});
+  render();
+})();
+</script>

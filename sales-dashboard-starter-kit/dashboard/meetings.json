@@ -1,0 +1,37 @@
+[
+ {
+  "type": "往訪",
+  "date": "2026-09-03",
+  "title": "（往訪）サンプル建託株式会社 山田様",
+  "status": "承諾",
+  "daito": true
+ },
+ {
+  "type": "往訪",
+  "date": "2026-09-05",
+  "title": "（往訪）サンプルハウス工業株式会社 鈴木様",
+  "status": "",
+  "daito": false
+ },
+ {
+  "type": "来社",
+  "date": "2026-09-08",
+  "title": "（来社）サンプル都市開発株式会社 佐藤様",
+  "status": "承諾",
+  "daito": false
+ },
+ {
+  "type": "meets",
+  "date": "2026-09-10",
+  "title": "(meets) サンプルアセットマネジメント株式会社 田中様",
+  "status": "承諾",
+  "daito": false
+ },
+ {
+  "type": "meets",
+  "date": "2026-09-12",
+  "title": "(meets/対面) Pjt_サンプル建託連携",
+  "status": "承諾",
+  "daito": true
+ }
+]
